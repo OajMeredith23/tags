@@ -38,8 +38,10 @@ export default function CreateAccount() {
         >
             <Group
                 style={{
-                    minWidth: '500px',
-                    padding: '1em'
+                    width: '100%',
+                    maxWidth: '500px',
+                    padding: '1em',
+                    margin: '1em',
                 }}
             >
                 <h3>Create Account</h3>

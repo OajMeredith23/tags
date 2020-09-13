@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import styled from 'styled-components'
-import { SecondaryBtn, SubtleListItem, ListItem, PrimaryBtn, useWindowSize, Hamburger, Cross } from 'zyppd-components'
+import { ListItem, PrimaryBtn, useWindowSize, Hamburger, Cross, RightArrow } from 'zyppd-components'
 const NavStyles = styled.nav`
     grid-column: 1;
     height: 100vh; 
@@ -30,7 +30,7 @@ const NavStyles = styled.nav`
     transition: .2s ease-out;
     @media(max-width: 600px){
         transform: translate(-120%, 0);
-        max-width: 200px;
+        // max-width: 200px;
     }
     &.menu-toggled{
         transform: translate(0, 0);
@@ -43,10 +43,9 @@ const MenuToggle = styled.div`
     left: .5em;
     z-index: 50;
 `
-export default function Nav({ user, signOut, userInfo, setFilter }) {
+export default function Nav({ user, signOut, userInfo, setFilter, filter }) {
     const windowSize = useWindowSize()
     const [menuVisible, setMenuVisible] = useState(false)
-    console.log(menuVisible)
     return (
         <>
             {windowSize.width < 600 &&
@@ -80,18 +79,24 @@ export default function Nav({ user, signOut, userInfo, setFilter }) {
                                     onClick={() => setFilter({ type: false, value: false })}
 
                                 >
+                                    {filter === false &&
+                                        <RightArrow />
+                                    }
                                     <strong>
                                         All Tags
                                 </strong>
                                 </ListItem>
 
-                                {userInfo.tags.map(tag => {
+                                {userInfo.tags.sort().map(tag => {
                                     return (
                                         <ListItem
                                             key={tag}
                                             onClick={() => setFilter({ type: 'tags', value: tag })}
 
                                         >
+                                            {tag === filter &&
+                                                <RightArrow />
+                                            }
                                             {tag}
                                         </ListItem>
                                     )
@@ -111,16 +116,23 @@ export default function Nav({ user, signOut, userInfo, setFilter }) {
                                     onClick={() => setFilter({ type: false, value: false })}
 
                                 >
+                                    {filter === false &&
+                                        <RightArrow />
+                                    }
                                     <strong>
                                         All Authors
-                        </strong>
+                                    </strong>
                                 </ListItem>
-                                {userInfo.authors.map(author => {
+                                {userInfo.authors.filter(author => author !== false).map(author => {
+                                    console.log(author)
                                     return (
                                         <ListItem
                                             key={author}
                                             onClick={() => setFilter({ type: 'author', value: author })}
                                         >
+                                            {author === filter &&
+                                                <RightArrow />
+                                            }
                                             {author}
                                         </ListItem>
                                     )

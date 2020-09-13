@@ -12,7 +12,7 @@ export default function MainApp({ user, signOut, notes, userInfo }) {
 
     return (
         <Container>
-            <Nav signOut={signOut} userInfo={userInfo} setFilter={setFilter} />
+            <Nav signOut={signOut} userInfo={userInfo} setFilter={setFilter} filter={filter.value} />
             <Main>
                 <div className="all-content">
 
@@ -20,23 +20,40 @@ export default function MainApp({ user, signOut, notes, userInfo }) {
                         {notes && notes.length > 0 ? notes
                             .filter(note => {
                                 if (filter.type === false) return note
-                                if (filter.type === 'tags') return note[filter.type].includes(filter.value)
+                                if (filter.type === 'tags') return note[filter.type] && note[filter.type].includes(filter.value)
                                 return note[filter.type] === filter.value
                             })
-                            .sort((a, b) => a.createdAt - b.createdAt)
+                            .sort((a, b) => b.createdAt - a.createdAt)
                             .map((note, i) => {
                                 return (
                                     <ListItem
                                         key={`${note.source}-${i}`}
+
                                     >
                                         <div className="content">
 
                                             <small>Created: {format(new Date(note.createdAt), 'PPpp')}</small>
                                             <div className="title">
-                                                <h4>{note.author}</h4>
+                                                <h3
+                                                    style={{ opacity: '0.8' }}
+                                                >{note.author}</h3>
                                                 <h2>{note.source}</h2>
+                                                {note.page_number && <p>Page: {note.page_number}</p>}
                                             </div>
-                                            <p class="text">{note.text}</p>
+                                            <div className="text">
+                                                <p>{note.text}</p>
+                                            </div>
+
+                                            {note.thoughts &&
+                                                <div
+                                                    className="thoughts"
+                                                >
+                                                    <strong>Thoughts</strong>
+                                                    <p>
+                                                        {note.thoughts}
+                                                    </p>
+                                                </div>
+                                            }
 
                                             {note.link &&
                                                 <div className="link">
@@ -57,15 +74,23 @@ export default function MainApp({ user, signOut, notes, userInfo }) {
                                                     className="cite"
                                                 >
                                                     <small >
-                                                        {note.citation}
+                                                        <i>
+                                                            {note.citation}
+                                                        </i>
                                                     </small>
                                                 </div>
                                             }
+
                                             {note.tags &&
                                                 <ul className="tags">
                                                     {note.tags.map(tag => {
                                                         return (
-                                                            <Pill>
+                                                            <Pill
+                                                                style={{
+                                                                    cursor: 'pointer'
+                                                                }}
+                                                                onClick={() => setFilter({ type: 'tags', value: tag })}
+                                                            >
                                                                 {tag}
                                                             </Pill>
                                                         )
@@ -115,19 +140,27 @@ export default function MainApp({ user, signOut, notes, userInfo }) {
 }
 
 const Container = styled.div`
-    .all-content{
+.all-content{
         min-height: 100vh;
     }
     @media(min-width: 600px){
     display: grid; 
-        grid-template-columns: minmax(150px, 1fr) 10fr;
+        grid-template-columns: minmax(max-content, 1fr) 10fr;
     }
 `
 const Main = styled.div`
     grid-column: 2;
+    padding-top: 3.75em;
+    .all-content{
+        max-width: 900px;  
+        margin: 0 auto;
+    }
 `
 const UL = styled.div`
     padding: 1em;
+    p, a, small, i {
+        max-width: 75ch;
+    }
     li { 
         .content {
             > * {
@@ -157,3 +190,5 @@ const UL = styled.div`
         }
     }
 `
+
+

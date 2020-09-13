@@ -1,7 +1,7 @@
 import React, { useState, useContext } from 'react'
 import { AuthContext } from '../Auth/AuthContext'
 import { Link } from 'react-router-dom'
-import { Group, Input, PrimaryBtn, Message } from 'zyppd-components'
+import { Group, Input, PrimaryBtn, SecondaryBtn, Message } from 'zyppd-components'
 
 export default function SignIn() {
     const { signIn, errorMessage } = useContext(AuthContext)
@@ -29,7 +29,6 @@ export default function SignIn() {
             style={{
                 minHeight: '100vh',
                 width: '100%',
-                border: '2px solid red',
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center'
@@ -37,8 +36,11 @@ export default function SignIn() {
         >
             <Group
                 style={{
-                    minWidth: '500px',
-                    padding: '1em'
+                    width: '100%',
+                    maxWidth: '500px',
+                    padding: '1em',
+                    margin: '1em',
+
                 }}
             >
                 <h2>Sign in</h2>
@@ -82,8 +84,14 @@ export default function SignIn() {
                     }}
                 >
                     <Link to="/">
-                        Create an account instead
-                </Link>
+                        <SecondaryBtn
+                            fullWidth={true}
+                            style={{ margin: '.5em' }}
+                        >
+
+                            Create an account instead
+                        </SecondaryBtn>
+                    </Link>
                 </div>
             </Group>
         </div>

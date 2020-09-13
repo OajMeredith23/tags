@@ -57,12 +57,14 @@ export function AddOrEditModal({ isVisible, user, close, currNote = {}, notes = 
         let id = createUID(10)
 
         const tags = await db.collection(`users`).doc(user.uid).get().then(doc => doc.data().tags)
-        const allTags = [...tags, ...note.tags]
+        const t = note.tags ? note.tags : []
+        const allTags = [...tags, ...t]
         const newTags = allTags.filter((tag, i) => allTags.indexOf(tag) === i)
         // allAuthors.splice(0, allAuthors.length, ...(new Set(allAuthors)))
 
+        const a = note.author ? note.author : false
         const authors = await db.collection(`users`).doc(user.uid).get().then(doc => doc.data().authors)
-        const allAuthors = ([...authors, note.author])
+        const allAuthors = ([...authors, a])
         const newAuthors = allAuthors.filter((tag, i) => allAuthors.indexOf(tag) === i)
 
 
@@ -119,12 +121,30 @@ export function AddOrEditModal({ isVisible, user, close, currNote = {}, notes = 
                 validationNeeded={false}
                 handleInput={handleChange}
             />
+            <Input
+                type="number"
+                name="page_number"
+                value={currNote.page_number ? currNote.page_number : ''}
+                message={'Page Number'}
+                placeholder="101"
+                validationNeeded={false}
+                handleInput={handleChange}
+            />
             <TextArea
                 type="text"
                 name="text"
                 value={currNote.text}
                 message="Citation"
                 placeholder="“Words can be like X-rays if you use them properly -- they’ll go through anything. You read and you’re pierced.” "
+                handleInput={handleChange}
+            />
+
+            <TextArea
+                type="text"
+                name="thoughts"
+                value={currNote.thoughts}
+                message="Thoughts"
+                placeholder="Brave New World explores the dehumanizing effects of technology, and implies that pain is necessary for life to have meaning. "
                 handleInput={handleChange}
             />
             <Input
@@ -149,20 +169,20 @@ export function AddOrEditModal({ isVisible, user, close, currNote = {}, notes = 
                 type="text"
                 name="citation"
                 value={currNote.citation ? currNote.citation : ''}
-                message={'Citation'}
+                message={'Reference'}
                 placeholder="Huxley, A., n.d. Brave New World, Aldous Huxley."
                 validationNeeded={false}
                 handleInput={handleChange}
             />
             <PrimaryBtn
                 onClick={() => Add()}
-                style={{ marginTop: '1em' }}
+                style={{ margin: '1em 0' }}
             >
                 Add Note
             </PrimaryBtn>
             {currNote.id &&
                 <SecondaryBtn
-                    style={{ marginTop: '1em' }}
+                    style={{ margin: '1em 0' }}
                     onClick={() => requiresCheck(`Are you sure you wish to remove this note?`, () => handleDelete())}
                 >
                     Delete
