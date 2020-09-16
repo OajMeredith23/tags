@@ -1,7 +1,8 @@
-import React, { useState } from 'react'
-import { PrimaryBtn, PlusIcon, Modal, Input, TextArea, SecondaryBtn, Cross, useCheck } from 'zyppd-components'
+import React, { useState, useEffect } from 'react'
+import { PrimaryBtn, PlusIcon, Modal, Input, TextArea, SecondaryBtn, Cross, useCheck, Checkbox, Group } from 'zyppd-components'
 import firebase from 'firebase'
 import createUID from '../createUid'
+import { add } from 'date-fns'
 
 export default function AddNote({ user }) {
     const [showModal, setShowModal] = useState(false)
@@ -34,8 +35,9 @@ export default function AddNote({ user }) {
 export function AddOrEditModal({ isVisible, user, close, currNote = {}, notes = [] }) {
     const { requiresCheck } = useCheck(currNote)
 
-    const [note, setNote] = useState(currNote)
+    const [used, setUsed] = useState(currNote.used)
 
+    const [note, setNote] = useState(currNote)
 
     function handleChange(e) {
         e = e.target || e
@@ -54,6 +56,9 @@ export function AddOrEditModal({ isVisible, user, close, currNote = {}, notes = 
 
     async function Add() {
         const query = db.collection(`users/${user.uid}/notes`)
+
+
+
         let id = createUID(10)
 
         const tags = await db.collection(`users`).doc(user.uid).get().then(doc => doc.data().tags)
@@ -70,8 +75,10 @@ export function AddOrEditModal({ isVisible, user, close, currNote = {}, notes = 
 
         db.collection(`users`).doc(user.uid).update({ tags: newTags, authors: newAuthors })
 
+        let hasBeenUsed = used || false
         currNote.id ? query.doc(currNote.id).update({
-            ...note
+            ...note,
+            used: hasBeenUsed
         })
             .then(() => {
                 close()
@@ -79,6 +86,7 @@ export function AddOrEditModal({ isVisible, user, close, currNote = {}, notes = 
             :
             query.doc(id).set({
                 ...note,
+                used: hasBeenUsed,
                 createdAt: new Date().getTime(),
                 id
             })
@@ -91,7 +99,6 @@ export function AddOrEditModal({ isVisible, user, close, currNote = {}, notes = 
 
     function handleDelete() {
 
-        // const withRemovedNote = notes.filter(note => note.id !== currNote.id)
         db.collection(`users/${user.uid}/notes`).doc(currNote.id).delete()
         close()
     }
@@ -99,24 +106,56 @@ export function AddOrEditModal({ isVisible, user, close, currNote = {}, notes = 
     return (
         <Modal
             isVisible={isVisible}
-            close={close}
+            close={() => {
+                close()
+                Object.entries(note).length > 0 && Add()
+            }}
             shade={true}
         >
-            <h3>Add Note</h3>
+            <div
+                style={{
+                    display: 'flex',
+                    alignItems: 'center'
+                }}
+            >
+                <SecondaryBtn
+                    onClick={close}
+                    style={{
+                        marginRight: '1em'
+                    }}
+                >
+                    <Cross />
+                </SecondaryBtn>
+                <h3>Add Note</h3>
+            </div>
+            <div
+                style={{
+                    margin: '1em 0 2.5em .5em'
+                }}
+            >
+                <Checkbox
+                    checked={used}
+                    onClick={() => setUsed(!used)}
+                    label="Cited"
+                ></Checkbox>
+            </div>
             <Input
                 type="text"
                 name="source"
                 value={currNote.source ? currNote.source : ''}
                 message={'Source Title'}
                 placeholder="Brave New World"
+                // useStorage={true}
+
                 validationNeeded={false}
                 handleInput={handleChange}
             />
             <Input
                 type="text"
-                name="author"
+                name={`author`}
                 value={currNote.author ? currNote.author : ''}
                 message={'Author'}
+                // useStorage={true}
                 placeholder="Aldous Huxley"
                 validationNeeded={false}
                 handleInput={handleChange}
@@ -134,7 +173,7 @@ export function AddOrEditModal({ isVisible, user, close, currNote = {}, notes = 
                 type="text"
                 name="text"
                 value={currNote.text}
-                message="Citation"
+                message="Excerpt"
                 placeholder="“Words can be like X-rays if you use them properly -- they’ll go through anything. You read and you’re pierced.” "
                 handleInput={handleChange}
             />
@@ -174,11 +213,14 @@ export function AddOrEditModal({ isVisible, user, close, currNote = {}, notes = 
                 validationNeeded={false}
                 handleInput={handleChange}
             />
+
+
+
             <PrimaryBtn
                 onClick={() => Add()}
                 style={{ margin: '1em 0' }}
             >
-                Add Note
+                {`${currNote && currNote.id ? 'Update' : 'Add'} Note`}
             </PrimaryBtn>
             {currNote.id &&
                 <SecondaryBtn
@@ -191,4 +233,8 @@ export function AddOrEditModal({ isVisible, user, close, currNote = {}, notes = 
             }
         </Modal>
     )
+}
+
+function getLocalStorage(name) {
+    return localStorage.getItem(name);
 }

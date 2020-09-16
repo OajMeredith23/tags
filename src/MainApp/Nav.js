@@ -43,7 +43,7 @@ const MenuToggle = styled.div`
     left: .5em;
     z-index: 50;
 `
-export default function Nav({ user, signOut, userInfo, setFilter, filter }) {
+export default function Nav({ user, signOut, userInfo, setFilter, filter, notes }) {
     const windowSize = useWindowSize()
     const [menuVisible, setMenuVisible] = useState(false)
     return (
@@ -88,6 +88,7 @@ export default function Nav({ user, signOut, userInfo, setFilter, filter }) {
                                 </ListItem>
 
                                 {userInfo.tags.sort().map(tag => {
+                                    const num = notes.filter(note => note.tags && note.tags.includes(tag)).length
                                     return (
                                         <ListItem
                                             key={tag}
@@ -98,6 +99,7 @@ export default function Nav({ user, signOut, userInfo, setFilter, filter }) {
                                                 <RightArrow />
                                             }
                                             {tag}
+                                            <NumOfTags>{num}</NumOfTags>
                                         </ListItem>
                                     )
                                 })}
@@ -124,7 +126,6 @@ export default function Nav({ user, signOut, userInfo, setFilter, filter }) {
                                     </strong>
                                 </ListItem>
                                 {userInfo.authors.filter(author => author !== false).map(author => {
-                                    console.log(author)
                                     return (
                                         <ListItem
                                             key={author}
@@ -141,9 +142,11 @@ export default function Nav({ user, signOut, userInfo, setFilter, filter }) {
                         </>
                     }
                 </div>
-                <PrimaryBtn
-                    onClick={() => signOut()}
-                    type="warning"
+                {/* <PrimaryBtn
+                    onClick={() => {
+                        const refs = notes.filter(note => note.used === true).filter(note => note.citation).map(note => note.citation)
+                        console.log(refs)
+                    }}
                     fullWidth={true}
                     style={{
                         alignSelf: 'flex-end',
@@ -151,10 +154,49 @@ export default function Nav({ user, signOut, userInfo, setFilter, filter }) {
                         margin: 'auto 0 2em 0'
                     }}
                 >
-                    Sign Out
+                    Create Bibliography
+            </PrimaryBtn> */}
+                <div
+                    style={{
+                        alignSelf: 'flex-end',
+                        justifySelf: 'flex-end',
+                        margin: 'auto 0 2em 0',
+                        width: '100%'
+                    }}
+                >
+
+                    <PrimaryBtn
+                        onClick={() => signOut()}
+                        type="warning"
+                        fullWidth={true}
+                        style={{
+                            // alignSelf: 'flex-end',
+                            // justifySelf: 'flex-end',
+                            margin: '1em 0 2em 0'
+                        }}
+                    >
+                        Sign Out
             </PrimaryBtn>
+                </div>
 
             </NavStyles>
         </>
     )
 }
+
+const NumOfTags = styled.div`
+    font-size: .8em;
+    opacity: .5;
+    width: 1.5em;
+    height: 1.5em;
+    margin-right: -.5em;
+    padding-left: .5em;
+    border-radius: 50%;
+    justify-self: flex-end;
+    align-self: flex-end;
+    margin-left: auto;
+    display: flex;
+    text-align: center;
+    justify-content: center;
+    align-items: center;
+`

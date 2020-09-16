@@ -3,7 +3,7 @@ import Nav from './Nav'
 import AddNote, { AddOrEditModal } from './AddNote'
 import { format } from 'date-fns'
 import styled from 'styled-components'
-import { ListItem, Pill, EditIcon, Message, Footer } from 'zyppd-components'
+import { ListItem, Pill, EditIcon, Message, Footer, Group } from 'zyppd-components'
 // import firebase from 'firebase'
 export default function MainApp({ user, signOut, notes, userInfo }) {
 
@@ -12,11 +12,18 @@ export default function MainApp({ user, signOut, notes, userInfo }) {
 
     return (
         <Container>
-            <Nav signOut={signOut} userInfo={userInfo} setFilter={setFilter} filter={filter.value} />
+            <Nav signOut={signOut} userInfo={userInfo} setFilter={setFilter} filter={filter.value} notes={notes} />
             <Main>
                 <div className="all-content">
 
                     <UL>
+                        {notes && notes.length > 0 &&
+                            <Group>
+                                <p><strong>{notes.length}</strong> notes</p>
+                                {userInfo && userInfo.tags && <p><strong>{userInfo.tags.length}</strong> tags</p>}
+                                {userInfo && userInfo.authors && <p><strong>{userInfo.authors.length}</strong> authors</p>}
+                            </Group>
+                        }
                         {notes && notes.length > 0 ? notes
                             .filter(note => {
                                 if (filter.type === false) return note
@@ -83,9 +90,10 @@ export default function MainApp({ user, signOut, notes, userInfo }) {
 
                                             {note.tags &&
                                                 <ul className="tags">
-                                                    {note.tags.map(tag => {
+                                                    {note.tags.map((tag, i) => {
                                                         return (
                                                             <Pill
+                                                                key={`${tag}-${i}`}
                                                                 style={{
                                                                     cursor: 'pointer'
                                                                 }}
@@ -101,9 +109,12 @@ export default function MainApp({ user, signOut, notes, userInfo }) {
                                         <EditIcon
                                             onClick={() => setShowEditModal(note)}
                                             style={{
-                                                alignSelf: 'flex-start',
-                                                justifySelf: 'flex-end',
-                                                marginLeft: 'auto'
+                                                // alignSelf: 'flex-start',
+                                                // justifySelf: 'flex-end',
+                                                // marginLeft: 'auto'
+                                                position: 'absolute',
+                                                top: '1em',
+                                                right: '1em'
                                             }}
                                         />
                                     </ListItem>
@@ -159,6 +170,7 @@ const Main = styled.div`
 const UL = styled.div`
     padding: 1em;
     p, a, small, i {
+        width: 100%;
         max-width: 75ch;
     }
     li { 
@@ -180,6 +192,7 @@ const UL = styled.div`
         }
         .tags{
             display: flex;
+            flex-wrap: wrap;
             gap: .25em;
             margin-top: 1em;
             div {
