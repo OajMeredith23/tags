@@ -24,3 +24,42 @@ exports.userDeleted = functions.auth.user()
         doc.delete().then(() => console.log(`doc for ${user.uid} deleted`)).catch(err => console.log(err))
 
     })
+
+
+exports.sendBibliography = functions.https.onRequest(async (req, res) => {
+    console.log(req.body)
+
+
+    let transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: 'oliver@zyppd.in',
+            pass: 'zyFQj9VAgCPzBPr'
+        }
+    })
+
+    let mailOptions = {
+        from: `Tags <bookings@zyppd.in>`,
+        to: req.body.to,
+        subject: 'Bibliography',
+        html: req.body.bibliography
+    }
+
+    try {
+
+        const mailer = await transporter.sendMail(mailOptions, (err, data) => {
+
+            if (!err) {
+                console.log('Email sent to ', to, 'for ', subject)
+                return res.send({ success: true })
+            } else {
+                console.log("err =>", err)
+                return res.send({ err: err })
+            }
+        })
+    } catch (err) {
+        console.log("email error =>", err)
+    }
+
+    res.status(200).send("true")
+})

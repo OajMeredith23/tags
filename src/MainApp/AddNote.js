@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react'
 import { PrimaryBtn, PlusIcon, Modal, Input, TextArea, SecondaryBtn, Cross, useCheck, Checkbox, Group } from 'zyppd-components'
 import firebase from 'firebase'
 import createUID from '../createUid'
-import { add } from 'date-fns'
 
 export default function AddNote({ user }) {
     const [showModal, setShowModal] = useState(false)
@@ -33,6 +32,7 @@ export default function AddNote({ user }) {
 }
 
 export function AddOrEditModal({ isVisible, user, close, currNote = {}, notes = [] }) {
+    console.log(currNote)
     const { requiresCheck } = useCheck(currNote)
 
     const [used, setUsed] = useState(currNote.used)
@@ -42,6 +42,7 @@ export function AddOrEditModal({ isVisible, user, close, currNote = {}, notes = 
     function handleChange(e) {
         e = e.target || e
         let val = e.value;
+        console.log(val)
 
         if (e.name === 'tags') { val = (e.value.split(', ')) }
         setNote(prevState => {
@@ -61,19 +62,6 @@ export function AddOrEditModal({ isVisible, user, close, currNote = {}, notes = 
 
         let id = createUID(10)
 
-        const tags = await db.collection(`users`).doc(user.uid).get().then(doc => doc.data().tags)
-        const t = note.tags ? note.tags : []
-        const allTags = [...tags, ...t]
-        const newTags = allTags.filter((tag, i) => allTags.indexOf(tag) === i)
-        // allAuthors.splice(0, allAuthors.length, ...(new Set(allAuthors)))
-
-        const a = note.author ? note.author : false
-        const authors = await db.collection(`users`).doc(user.uid).get().then(doc => doc.data().authors)
-        const allAuthors = ([...authors, a])
-        const newAuthors = allAuthors.filter((tag, i) => allAuthors.indexOf(tag) === i)
-
-
-        db.collection(`users`).doc(user.uid).update({ tags: newTags, authors: newAuthors })
 
         let hasBeenUsed = used || false
         currNote.id ? query.doc(currNote.id).update({

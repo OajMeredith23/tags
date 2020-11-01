@@ -1,21 +1,21 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import styled from 'styled-components'
-import { ListItem, PrimaryBtn, useWindowSize, Hamburger, Cross, RightArrow } from 'zyppd-components'
+import { ListItem, PrimaryBtn, useWindowSize, RightArrow, RightChevron, LeftChevron, SecondaryBtn, Modal } from 'zyppd-components'
+import dompurify from 'dompurify'
 const NavStyles = styled.nav`
-    grid-column: 1;
+    position: fixed; 
+    top: 0;
+    left: 0;
     height: 100vh; 
     position: fixed;
     left: 0;
     z-index: 20;
+    width: 300px;
     background: ${({ theme }) => theme.foreground};
-    @media(min-width:600px){
-        position: sticky;
-        
-    }
     top: 0;
     box-shadow: ${({ theme }) => theme.shadow};
     padding: .5em;
-    padding-top: 3em;
+    padding-top: 4em;
     .hamburger {
         position: fixed;
         top: .5em;
@@ -26,13 +26,11 @@ const NavStyles = styled.nav`
     display: flex;
     flex-direction: column;
     overflow-y: scroll;
-    display: flex;
     transition: .2s ease-out;
-    @media(max-width: 600px){
-        transform: translate(-120%, 0);
-        // max-width: 200px;
-    }
+    transform: translate(-80%, 0);
+    opacity: 0;
     &.menu-toggled{
+        opacity: 1;
         transform: translate(0, 0);
     }
 `
@@ -43,31 +41,86 @@ const MenuToggle = styled.div`
     left: .5em;
     z-index: 50;
 `
-export default function Nav({ user, signOut, userInfo, setFilter, filter, notes }) {
+export default function Nav({ user, signOut, userInfo, setChosenAuthors, chosenAuthors, availableAuthors, setTags, chosenTags, notes }) {
+
     const windowSize = useWindowSize()
     const [menuVisible, setMenuVisible] = useState(false)
+    const [tags, setAllTags] = useState([])
+    const [authors, setAllAuthors] = useState([])
+    const [bibliography, setBibliography] = useState(false);
+
+    useEffect(() => {
+        console.log('bibliography')
+        console.log(bibliography)
+    }, [bibliography])
+
+
+    useEffect(() => {
+        // Get all the tags from the loaded notes
+        const allTags = notes && notes.filter(note => note.tags).map(note => note.tags).flat()
+        const allAuthors = notes && notes.filter(note => note.author).map(note => note.author).flat()
+        allTags && setAllTags(Array.from(new Set(allTags)))
+        allTags && setAllAuthors(Array.from(new Set(allAuthors)))
+    }, [notes])
+
+    const sanitizer = dompurify.sanitize;
+
     return (
         <>
-            {windowSize.width < 600 &&
+
+
+            {windowSize.width < 6000 &&
                 <>
                     {menuVisible ?
                         <MenuToggle
                             onClick={() => setMenuVisible(!menuVisible)}
                         >
-                            <Cross />
+                            <SecondaryBtn>
+                                <LeftChevron />
+                            </SecondaryBtn>
                         </MenuToggle>
                         : <MenuToggle
                             onClick={() => setMenuVisible(!menuVisible)}
                         >
-                            <Hamburger />
+                            <SecondaryBtn>
+                                <RightChevron />
+                            </SecondaryBtn>
                         </MenuToggle>
                     }
                 </>
             }
+            {bibliography &&
+                <Modal
+                    isVisible={!!bibliography}
+                    close={() => setBibliography(false)}
+                    shade={true}
+                >
+                    {/* {sanitizer(bibliography)} */}
+                    <p
+                        className="description"
+                        dangerouslySetInnerHTML={{ __html: sanitizer(bibliography) }}
+                    />
+                </Modal>
+            }
             <NavStyles className={menuVisible ? 'menu-toggled' : ''}>
 
                 <div>
-                    {userInfo && userInfo.tags && userInfo.tags.length > 1 &&
+
+
+                    {chosenAuthors.length > 0 || chosenTags.length > 0 ?
+                        <PrimaryBtn
+                            type="warning"
+                            fullWidth={true}
+                            onClick={() => {
+                                setChosenAuthors(false)
+                                setTags(false)
+                            }}
+                        >
+                            Clear Selection
+                        </PrimaryBtn>
+                        : ''
+                    }
+                    {tags.length > 0 &&
                         <>
                             <h4
                                 style={{
@@ -76,37 +129,42 @@ export default function Nav({ user, signOut, userInfo, setFilter, filter, notes 
                             >Tags</h4>
                             <ul>
                                 <ListItem
-                                    onClick={() => setFilter({ type: false, value: false })}
+                                    onClick={() => setTags(false)}
 
                                 >
-                                    {filter === false &&
-                                        <RightArrow />
+                                    {chosenTags.length === 0 ?
+                                        <RightArrow /> : ''
                                     }
                                     <strong>
                                         All Tags
                                 </strong>
                                 </ListItem>
 
-                                {userInfo.tags.sort().map(tag => {
-                                    const num = notes.filter(note => note.tags && note.tags.includes(tag)).length
-                                    return (
+                                {tags.length > 0 && tags.sort().map(tag => {
+
+                                    const num = () => {
+                                        const result = notes.filter(note => note.tags && note.tags.includes(tag))
+                                        return result.filter(note => chosenTags.every(t => note.tags.includes(t))).length
+                                    }
+
+                                    return num() > 0 && (
                                         <ListItem
                                             key={tag}
-                                            onClick={() => setFilter({ type: 'tags', value: tag })}
-
+                                            onClick={num() > 0 ? () => setTags(tag) : null}
+                                            type={num() === 0 ? 'disabled' : null}
                                         >
-                                            {tag === filter &&
+                                            {chosenTags.includes(tag) &&
                                                 <RightArrow />
                                             }
                                             {tag}
-                                            <NumOfTags>{num}</NumOfTags>
+                                            <NumOfTags>{num()}</NumOfTags>
                                         </ListItem>
                                     )
                                 })}
                             </ul>
                         </>
                     }
-                    {userInfo && userInfo.authors && userInfo.authors.length > 1 &&
+                    {availableAuthors.length > 0 &&
                         <>
                             <h4
                                 style={{
@@ -115,47 +173,42 @@ export default function Nav({ user, signOut, userInfo, setFilter, filter, notes 
                             >Authors</h4>
                             <ul>
                                 <ListItem
-                                    onClick={() => setFilter({ type: false, value: false })}
-
+                                    onClick={() => setChosenAuthors(false)}
                                 >
-                                    {filter === false &&
-                                        <RightArrow />
+                                    {chosenAuthors && chosenAuthors.length === 0 ?
+                                        <RightArrow /> : ''
                                     }
                                     <strong>
                                         All Authors
                                     </strong>
                                 </ListItem>
-                                {userInfo.authors.filter(author => author !== false).map(author => {
-                                    return (
-                                        <ListItem
-                                            key={author}
-                                            onClick={() => setFilter({ type: 'author', value: author })}
-                                        >
-                                            {author === filter &&
-                                                <RightArrow />
+                                {
+                                    availableAuthors.filter(author => author !== false)
+                                        .sort()
+                                        .map((author, i) => {
+                                            const num = () => {
+                                                const result = notes.filter(note => note.author === author).length
+                                                return result
                                             }
-                                            {author}
-                                        </ListItem>
-                                    )
-                                })}
+                                            return (
+                                                <ListItem
+                                                    key={`${author}_${i}`}
+                                                    onClick={() => setChosenAuthors(author)}
+                                                >
+                                                    {chosenAuthors.includes(author) &&
+                                                        <RightArrow />
+                                                    }
+                                                    {author}
+                                                    <NumOfTags>{num()}</NumOfTags>
+
+                                                </ListItem>
+                                            )
+                                        })}
                             </ul>
                         </>
                     }
                 </div>
-                {/* <PrimaryBtn
-                    onClick={() => {
-                        const refs = notes.filter(note => note.used === true).filter(note => note.citation).map(note => note.citation)
-                        console.log(refs)
-                    }}
-                    fullWidth={true}
-                    style={{
-                        alignSelf: 'flex-end',
-                        justifySelf: 'flex-end',
-                        margin: 'auto 0 2em 0'
-                    }}
-                >
-                    Create Bibliography
-            </PrimaryBtn> */}
+
                 <div
                     style={{
                         alignSelf: 'flex-end',
@@ -164,6 +217,27 @@ export default function Nav({ user, signOut, userInfo, setFilter, filter, notes 
                         width: '100%'
                     }}
                 >
+                    <PrimaryBtn
+
+                        onClick={() => {
+                            let refs = notes
+                                // .filter(note => note.used === true)
+                                .filter(note => note.citation)
+                                .map(note => note.citation)
+                                .sort()
+                            refs = Array.from(new Set(refs))
+                            setBibliography(refs.join(" <br/>  <br/> "))
+                        }}
+
+                        fullWidth={true}
+                        style={{
+                            alignSelf: 'flex-end',
+                            justifySelf: 'flex-end',
+                            margin: 'auto 0 2em 0'
+                        }}
+                    >
+                        View Bibliography
+</PrimaryBtn>
 
                     <PrimaryBtn
                         onClick={() => signOut()}
